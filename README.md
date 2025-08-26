@@ -21,7 +21,7 @@
 ---
 
 ## 🚀 在线体验
-👉 [立即访问 Demo](https://yyzq-cf.github.io/m3u8-online-player/)  
+👉 [立即访问 Demo](https://m3u8.itellyou.cf/)  
 
 > Demo 部署在 **GitHub Pages**，仅供测试 m3u8 流媒体格式。
 
