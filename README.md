@@ -7,6 +7,9 @@
 [![GitHub forks](https://img.shields.io/github/forks/yyzq-cf/m3u8-online-player?style=flat-square)](https://github.com/yyzq-cf/m3u8-online-player/network/members)
 [![GitHub license](https://img.shields.io/github/license/yyzq-cf/m3u8-online-player?style=flat-square)](https://github.com/yyzq-cf/m3u8-online-player/blob/main/LICENSE)
 
+
+![Preview](https://raw.githubusercontent.com/yyzq-cf/m3u8-online-player/refs/heads/main/home.png)
+
 ---
 
 ## ✨ 功能特点
