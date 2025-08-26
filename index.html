@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head> 
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<title>m3u8在线播放器 - 高清流畅播放体验</title> 
+<meta name="keywords" content="m3u8在线播放,m3u8播放器,在线m3u8,视频播放,HLS播放"> 
+<meta name="description" content="专业的m3u8在线播放器，支持各种HLS流媒体格式，无需安装插件，高清高清流畅流畅播放体验"> 
+<meta http-equiv="Cache-Control" content="no-siteapp">
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+<script src="https://s2.pstatp.com/cdn/expire-1-M/jquery/1.7.1/jquery.min.js" type="application/javascript"></script>
+<script src="https://s0.pstatp.com/cdn/expire-1-M/hls.js/0.10.1/hls.min.js" type="application/javascript"></script>
+<script src="https://s2.pstatp.com/cdn/expire-1-M/dplayer/1.25.0/DPlayer.min.js" type="application/javascript"></script>
+<link href="https://s2.pstatp.com/cdn/expire-1-M/dplayer/1.25.0/DPlayer.min.css" type="text/css" rel="stylesheet">
+<link href="https://s3.pstatp.com/cdn/expire-1-M/amazeui/2.7.2/css/amazeui.min.css" type="text/css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+/* 基础样式重置与全局设置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html {
+    font-size: 62.5%;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    scroll-behavior: smooth;
+}
+body {
+    background-color: #f0f2f5;
+    color: #333;
+    line-height: 1.6;
+    font-size: 1.4rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+/* 头部样式 */
+header {
+    background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%);
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease;
+}
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.8;
+}
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 2;
+}
+/* 导航菜单样式 - 重点优化间距 */
+.nav-container {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 0;
+}
+.logo-container {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+}
+.logo-container img {
+    height: 36px;
+    margin-right: 0;
+    transition: transform 0.3s ease;
+}
+.logo-container img:hover {
+    transform: scale(1.05);
+}
+.main-nav {
+    display: flex;
+    gap: 1.5rem;
+    margin-left: 0.5rem;
+}
+.main-nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.4rem;
+    font-weight: 500;
+    padding: 0.6rem 0;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.main-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #ce93d8;
+    transition: width 0.3s ease;
+}
+.main-nav a:hover {
+    color: #e1bee7;
+}
+.main-nav a:hover::after {
+    width: 100%;
+}
+.main-nav a.active {
+    color: #e1bee7;
+}
+.main-nav a.active::after {
+    width: 100%;
+}
+/* 标题样式 */
+.header-title {
+    text-align: center;
+    padding: 0.6rem 0 1.5rem;
+}
+.header-title h1 {
+    color: white;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+/* 主容器样式 */
+.container {
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+    margin: 3rem auto;
+    padding: 0 2rem;
+}
+/* 输入区域样式 */
+.input-section {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+.input-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #6a1b9a, #8e24aa, #ba68c8);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+.input-section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+.input-section:hover::before {
+    transform: scaleX(1);
+}
+/* 输入框和按钮容器优化 */
+.input-container {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+#url {
+    flex: 1;
+    padding: 1.6rem 1.8rem;
+    font-size: 1.6rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+    min-width: 0;
+}
+#url:focus {
+    border-color: #8e24aa;
+    box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.15);
+    outline: none;
+    background-color: white;
+}
+/* 播放按钮优化 - 确保完整显示 */
+#doplayers {
+    background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%);
+    color: white;
+    border: none;
+    padding: 1.6rem 2.2rem;
+    border-radius: 8px;
+    font-size: 1.6rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+    white-space: nowrap;
+    min-width: 130px;
+    flex-shrink: 0;
+    height: auto;
+}
+#doplayers:hover {
+    background: linear-gradient(135deg, #5b147d 0%, #7b1fa2 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(106, 27, 154, 0.4);
+}
+#doplayers:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(106, 27, 154, 0.3);
+}
+/* 示例视频链接样式 */
+.example-link {
+    display: inline-block;
+    color: #6a1b9a;
+    text-decoration: none;
+    font-size: 1.4rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    border: 1px solid #e1bee7;
+    background-color: #f3e5f5;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-left: 1rem;
+}
+.example-link:hover {
+    background-color: #e1bee7;
+    color: #4a148c;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(106, 27, 154, 0.2);
+}
+/* 播放器区域样式 */
+.player-section {
+    background: #121212;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    position: relative;
+    aspect-ratio: 16 / 9;
+    min-height: 300px;
+    transition: all 0.3s ease;
+}
+.player-section:hover {
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.22);
+}
+#ckplays {
+    width: 100%;
+    height: 100%;
+}
+/* 播放历史区域样式 */
+.history-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    margin: 2.5rem 0;
+    display: none;
+    animation: fadeIn 0.5s ease forwards;
+}
+.history-section.visible {
+    display: block;
+}
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+.history-title {
+    font-size: 1.8rem;
+    color: #4a148c;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+.clear-history {
+    color: #6a1b9a;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+.clear-history:hover {
+    color: #4a148c;
+    background-color: rgba(106, 27, 154, 0.1);
+    transform: translateY(-2px);
+}
+.history-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background-color: #f9f5ff;
+    border: 1px solid #e1e5eb;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.history-item:hover {
+    background-color: #f0e6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(106, 27, 154, 0.1);
+}
+.history-url {
+    flex: 1;
+    font-size: 1.4rem;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 1rem;
+}
+.history-actions {
+    display: flex;
+    gap: 0.8rem;
+}
+.history-play, .history-remove {
+    background: none;
+    border: none;
+    color: #6a1b9a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.history-play:hover, .history-remove:hover {
+    background-color: rgba(106, 27, 154, 0.1);
+    color: #4a148c;
+}
+.no-history {
+    text-align: center;
+    padding: 2rem;
+    color: #9e9e9e;
+    font-size: 1.6rem;
+}
+/* 加载状态样式 */
+.loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: white;
+    font-size: 1.6rem;
+    gap: 1.5rem;
+}
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.15);
+    border-top-color: #ce93d8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: relative;
+}
+.spinner::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #e1bee7;
+    border-radius: 50%;
+    animation: spin 0.8s reverse infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* 提示信息样式 */
+.info-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #9e9e9e;
+    font-size: 1.8rem;
+    text-align: center;
+    padding: 0 2rem;
+    transition: all 0.3s ease;
+}
+/* 功能说明区域 */
+.features-section {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 3rem;
+}
+.features-title {
+    font-size: 2rem;
+    color: #4a148c;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+.feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.feature-item:hover {
+    background-color: #f9f5ff;
+    transform: translateY(-5px);
+}
+.feature-icon {
+    font-size: 3rem;
+    color: #8e24aa;
+    margin-bottom: 1.5rem;
+}
+.feature-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+}
+.feature-desc {
+    font-size: 1.4rem;
+    color: #666;
+    line-height: 1.6;
+}
+/* 页脚样式 */
+footer {
+    background-color: #212121;
+    color: #a0aec0;
+    padding: 4rem 0 2rem;
+    margin-top: 5rem;
+    position: relative;
+    overflow: hidden;
+}
+footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #6a1b9a, #8e24aa, #ba68c8);
+}
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+.footer-links a {
+    color: #a0aec0;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 1.4rem;
+    position: relative;
+    padding: 0.5rem 0;
+}
+.footer-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #ce93d8;
+    transition: width 0.3s ease;
+}
+.footer-links a:hover {
+    color: #ce93d8;
+}
+.footer-links a:hover::after {
+    width: 100%;
+}
+.copyright {
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
+    opacity: 0.8;
+    line-height: 1.8;
+}
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .input-container {
+        flex-direction: column;
+        margin-bottom: 1rem;
+    }
+    
+    #doplayers {
+        width: 100%;
+        padding: 1.6rem 1.2rem;
+        min-width: auto;
+        font-size: 1.7rem;
+    }
+    
+    .example-link {
+        width: 100%;
+        margin-left: 0;
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    .header-title h1 {
+        font-size: 2.2rem;
+    }
+    
+    .input-section {
+        padding: 2rem;
+    }
+    
+    .main-nav {
+        gap: 1rem;
+    }
+    
+    .main-nav a {
+        font-size: 1.2rem;
+    }
+    .theme-settings {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    .logo-container img {
+        height: 30px;
+        margin-right: 0;
+    }
+    .history-url {
+        font-size: 1.3rem;
+    }
+}
+/* 针对超小屏幕的额外适配 */
+@media screen and (max-width: 360px) {
+    #doplayers {
+        font-size: 1.5rem;
+        gap: 0.5rem;
+        padding: 1.4rem 1rem;
+    }
+    
+    .input-section {
+        padding: 1.5rem;
+    }
+    
+    .main-nav {
+        gap: 0.7rem;
+    }
+    .logo-container img {
+        height: 26px;
+    }
+    .main-nav a {
+        font-size: 1.1rem;
+    }
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+/* 动画效果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.container > div {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+}
+.input-section {
+    animation-delay: 0.1s;
+}
+.player-section {
+    animation-delay: 0.3s;
+}
+.history-section {
+    animation-delay: 0.4s;
+}
+.features-section {
+    animation-delay: 0.5s;
+}
+/* 错误状态样式 */
+#url.error {
+    border-color: #ff4444;
+    box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.15);
+}
+/* 主题设置区域样式 */
+.theme-settings {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #f0f0f0;
+    padding-bottom: 0.5rem;
+}
+.theme-label {
+    font-size: 1.5rem;
+    margin-right: 0.8rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+    line-height: 1.8;
+}
+.theme-control-group {
+    display: flex;
+    align-items: center;
+}
+#themeToggle {
+    vertical-align: middle;
+    font-weight: 600 !important;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.3) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+/* 黑夜模式样式 */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+body.dark-mode .input-section,
+body.dark-mode .history-section,
+body.dark-mode .features-section {
+    background: #1e1e1e;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+body.dark-mode .feature-title,
+body.dark-mode .history-url {
+    color: #e0e0e0;
+}
+body.dark-mode .feature-desc {
+    color: #b0b0b0;
+}
+body.dark-mode #url {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #3d3d3d;
+}
+body.dark-mode .example-link,
+body.dark-mode .history-item {
+    background-color: #332940;
+    color: #ce93d8;
+    border-color: #4a3a5c;
+}
+body.dark-mode .example-link:hover,
+body.dark-mode .history-item:hover {
+    background-color: #4a3a5c;
+    color: #e1bee7;
+}
+body.dark-mode .info-message,
+body.dark-mode .no-history {
+    color: #b0b0b0;
+}
+body.dark-mode .copyright {
+    color: #707070;
+}
+body.dark-mode .theme-settings,
+body.dark-mode .history-header {
+    border-top: 1px dashed #333;
+}
+body.dark-mode .features-title,
+body.dark-mode .history-title {
+    color: #ce93d8;
+    border-bottom: 1px solid #333;
+}
+body.dark-mode .clear-history,
+body.dark-mode .history-play,
+body.dark-mode .history-remove {
+    color: #ce93d8;
+}
+body.dark-mode .clear-history:hover,
+body.dark-mode .history-play:hover,
+body.dark-mode .history-remove:hover {
+    color: #e1bee7;
+    background-color: rgba(156, 39, 176, 0.2);
+}
+body.dark-mode .theme-label {
+    color: #f0f0f0;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+body:not(.dark-mode) .theme-label {
+    color: #222;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
+}
+#primaryColor {
+    vertical-align: middle;
+}
+</style>
+</head> 
+ <body>
+<header>
+    <div class="header-container">
+        <div class="nav-container">
+            <div class="logo-container">
+                <img src="https://png.ywsj.gq/i/2025/08/16/nzza1x.png
+" alt="m3u8在线播放器logo" title="m3u8在线播放器">
+            </div>
+            
+            <nav class="main-nav">
+                <a href="#" class="active"><i class="fas fa-home"></i> 首页</a>
+                <a href="#history-section"><i class="fas fa-history"></i> 播放历史</a>
+                <a href="#"><i class="fas fa-question-circle"></i> 使用帮助</a>
+                <a href="#"><i class="fas fa-info-circle"></i> 关于我们</a>
+            </nav>
+        </div>
+        
+        <div class="header-title">
+            <h1>m3u8在线播放器</h1>
+        </div>
+    </div>
+</header>
+<div class="container">
+    <div class="input-section">
+        <div class="input-container">
+            <input type="text" class="am-form-field" name="url" id="url" placeholder="请输入支持https的m3u8地址，例如：https://example.com/stream.m3u8">
+            <button class="am-btn am-btn-default" type="button" name="doplayers" id="doplayers">
+                <i class="fas fa-play"></i> 立即播放
+            </button>
+        </div>
+        <div class="example-container">
+            <span style="font-size: 1.4rem; color: #666;">示例视频：</span>
+            <a href="javascript:;" class="example-link" data-url="https://test-streams.mux.dev/tos_ismc/main.m3u8">
+                <i class="fas fa-film"></i> 点击播放测试视频
+            </a>
+        </div>
+        
+        <div class="theme-settings" style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center;">
+            <div class="theme-control-group">
+                <label class="theme-label">主色调:</label>
+                <input type="color" id="primaryColor" value="#6a1b9a" style="width: 42px; height: 32px; border: 1px solid #ddd; cursor: pointer; border-radius: 4px;">
+            </div>
+            <div class="theme-control-group">
+                <label class="theme-label">模式:</label>
+                <button id="themeToggle" class="am-btn am-btn-default" style="padding: 0.6rem 1.2rem; font-size: 1.5rem;">
+                    <i class="fas fa-moon"></i> 切换黑夜模式
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player-section">
+        <div id="ckplays">
+            <div class="info-message">
+                请输入m3u8视频地址并点击播放按钮<br>
+                <small style="font-size: 1.4rem; margin-top: 1rem; display: block; color: #757575;">支持HLS流媒体格式，无需安装插件</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 播放历史区域 -->
+    <div id="history-section" class="history-section">
+        <div class="history-header">
+            <h2 class="history-title">
+                <i class="fas fa-history"></i> 播放历史
+            </h2>
+            <button class="clear-history" id="clear-history-btn">
+                <i class="fas fa-trash"></i> 清空历史
+            </button>
+        </div>
+        <div class="history-list" id="history-list">
+            <div class="no-history">暂无播放历史</div>
+        </div>
+    </div>
+    
+    <div class="features-section">
+        <h2 class="features-title"><i class="fas fa-star"></i> 播放器特点</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">快速加载</h3>
+                <p class="feature-desc">优化的加载策略，减少等待时间，快速开始播放体验</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3 class="feature-title">高清流畅</h3>
+                <p class="feature-desc">支持多种清晰度切换，自适应带宽，保证播放流畅度</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="feature-title">全设备支持</h3>
+                <p class="feature-desc">完美适配电脑、平板和手机等各种设备，响应式设计</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">安全可靠</h3>
+                <p class="feature-desc">无需安装插件，在线播放更安全，保护您的设备安全</p>
+            </div>
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="footer-container">
+        <div class="footer-links">
+            <a href="#">关于我们</a>
+            <a href="#">使用帮助</a>
+            <a href="#">隐私政策</a>
+            <a href="https://www.ywsj365.com/" target="_blank">联系我们</a>
+        </div>
+        <p class="copyright">© 2025-2026 m3u8.itellyou.cf All Rights Reserved.<br>
+        本工具仅用于在线播放m3u8格式视频，不存储任何视频内容</p>
+    </div>
+</footer>
+<script>
+$(function(){
+    // 存储最近播放记录
+    let recentUrls = JSON.parse(localStorage.getItem('recentM3u8Urls') || '[]');
+    const historySection = $('#history-section');
+    const historyList = $('#history-list');
+    
+    // 初始化播放历史显示
+    renderHistoryList();
+    
+    // 播放功能函数
+    function playVideo(url) {
+        if(url) {
+            // 验证URL是否以http开头
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            
+            // 更新输入框内容
+            $("#url").val(url).removeClass("error");
+            
+            // 显示加载状态
+            var playerContainer = $("#ckplays");
+            playerContainer.html('<div class="loading-indicator"><div class="spinner"></div><p>正在加载视频...</p></div>');
+            
+            // 创建播放器
+            setTimeout(function() {
+                // 销毁可能存在的旧播放器
+                if (window.dp) {
+                    window.dp.destroy();
+                }
+                
+                // 获取当前主题色
+                const primaryColor = localStorage.getItem('primaryColor') || '#6a1b9a';
+                
+                // 创建新播放器
+                window.dp = new DPlayer({
+                    container: document.getElementById('ckplays'),
+                    video: {
+                        url: url,
+                        type: 'hls',
+                        preload: 'auto'
+                    },
+                    autoplay: true,
+                    theme: primaryColor,
+                    volume: 0.7,
+                    mutex: true
+                });
+                
+                // 视频加载失败处理
+                window.dp.on('error', function(err) {
+                    console.error('视频加载错误:', err);
+                    playerContainer.html('<div class="info-message">视频加载失败<br>请检查地址是否正确或是否支持HLS格式</div>');
+                });
+                
+                // 视频可以播放时
+                window.dp.on('canplay', function() {
+                    // 添加到最近播放记录
+                    addToRecent(url);
+                    // 更新历史记录显示
+                    renderHistoryList();
+                });
+                
+                // 视频结束时
+                window.dp.on('ended', function() {
+                    playerContainer.append('<div class="info-message" style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px;">视频播放完毕</div>');
+                });
+            }, 500);
+        } else {
+            // 显示更友好的提示
+            const placeholder = $("#url").attr("placeholder");
+            $("#url").attr("placeholder", "⚠️ 请输入有效的m3u8地址");
+            $("#url").addClass("error");
+            
+            setTimeout(() => {
+                $("#url").attr("placeholder", placeholder);
+                $("#url").removeClass("error");
+            }, 2000);
+        }
+    }
+    
+    // 立即播放按钮点击事件
+    $("#doplayers").on("click", function(){
+        var url = $("#url").val().trim();
+        playVideo(url);
+    });
+    
+    // 示例视频链接点击事件
+    $(".example-link").on("click", function(){
+        var exampleUrl = $(this).data("url");
+        playVideo(exampleUrl);
+    });
+    
+    // 支持回车键播放
+    $("#url").keypress(function(e) {
+        if(e.which === 13) {
+            var url = $("#url").val().trim();
+            playVideo(url);
+        }
+    });
+    
+    // 添加到最近播放
+    function addToRecent(url) {
+        // 去重
+        recentUrls = recentUrls.filter(item => item !== url);
+        // 添加到开头
+        recentUrls.unshift(url);
+        // 限制最多10条记录
+        if (recentUrls.length > 10) {
+            recentUrls = recentUrls.slice(0, 10);
+        }
+        // 保存到本地存储
+        localStorage.setItem('recentM3u8Urls', JSON.stringify(recentUrls));
+    }
+    
+    // 渲染播放历史列表
+    function renderHistoryList() {
+        // 如果没有历史记录
+        if (recentUrls.length === 0) {
+            historyList.html('<div class="no-history">暂无播放历史</div>');
+            return;
+        }
+        
+        // 生成历史记录HTML
+        let historyHtml = '';
+        recentUrls.forEach((url, index) => {
+            // 截取URL显示，保持可读性
+            let displayUrl = url;
+            if (displayUrl.length > 70) {
+                displayUrl = displayUrl.substring(0, 35) + '...' + displayUrl.substring(displayUrl.length - 30);
+            }
+            
+            historyHtml += `
+                <div class="history-item" data-index="${index}">
+                    <div class="history-url" title="${url}">${displayUrl}</div>
+                    <div class="history-actions">
+                        <button class="history-play" title="播放">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="history-remove" title="删除">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        historyList.html(historyHtml);
+        
+        // 绑定历史记录项事件
+        bindHistoryItemEvents();
+    }
+    
+    // 绑定历史记录项的事件
+    function bindHistoryItemEvents() {
+        // 播放历史记录
+        $('.history-play').on('click', function(e) {
+            e.stopPropagation();
+            const index = $(this).closest('.history-item').data('index');
+            const url = recentUrls[index];
+            playVideo(url);
+        });
+        
+        // 删除历史记录
+        $('.history-remove').on('click', function(e) {
+            e.stopPropagation();
+            const index = $(this).closest('.history-item').data('index');
+            // 移除该记录
+            recentUrls.splice(index, 1);
+            // 保存到本地存储
+            localStorage.setItem('recentM3u8Urls', JSON.stringify(recentUrls));
+            // 重新渲染列表
+            renderHistoryList();
+        });
+        
+        // 点击整个历史项播放
+        $('.history-item').on('click', function() {
+            const index = $(this).data('index');
+            const url = recentUrls[index];
+            playVideo(url);
+        });
+    }
+    
+    // 清空历史记录 - 修复部分：使用ID选择器确保正确绑定
+    $('#clear-history-btn').on('click', function() {
+        // 显示确认对话框
+        if (confirm('确定要清空所有播放历史吗？此操作不可恢复。')) {
+            // 清空历史记录数组
+            recentUrls = [];
+            // 更新本地存储
+            localStorage.setItem('recentM3u8Urls', JSON.stringify(recentUrls));
+            // 重新渲染历史列表
+            renderHistoryList();
+            
+            // 显示操作成功的提示
+            alert('播放历史已成功清空');
+        }
+    });
+    
+    // 导航菜单点击事件
+    $(".main-nav a").on("click", function(e) {
+        e.preventDefault();
+        // 移除所有激活状态
+        $(".main-nav a").removeClass("active");
+        // 给当前点击项添加激活状态
+        $(this).addClass("active");
+        
+        const menuText = $(this).text().trim();
+        if (menuText === "播放历史") {
+            // 显示历史记录区域
+            historySection.addClass('visible');
+            // 滚动到历史记录区域
+            $('html, body').animate({
+                scrollTop: historySection.offset().top - 20
+            }, 500);
+        } else if (menuText === "首页") {
+            // 首页隐藏历史记录
+            historySection.removeClass('visible');
+            // 滚动到顶部
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
+        } else if (menuText === "使用帮助") {
+            alert("使用帮助:\n1. 在输入框中输入m3u8格式的视频地址\n2. 点击立即播放按钮或按回车键开始播放\n3. 也可以点击示例视频直接测试\n4. 播放历史会自动保存，点击可快速重新播放");
+        } else if (menuText === "关于我们") {
+            alert("关于我们:\n本工具是一个在线m3u8播放器，支持各种HLS流媒体格式，无需安装插件即可使用。");
+        }
+    });
+    
+    // 主题相关功能
+    (function() {
+        // 保存当前主题状态
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        const savedColor = localStorage.getItem('primaryColor') || '#6a1b9a';
+        
+        // 初始化颜色选择器
+        const colorPicker = document.getElementById('primaryColor');
+        colorPicker.value = savedColor;
+        
+        // 初始化主题
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            updateThemeToggleText(true);
+        }
+        updatePrimaryColor(savedColor);
+        
+        // 更新主色调
+        function updatePrimaryColor(color) {
+            // 生成稍深和稍浅的颜色用于渐变
+            const darkerColor = shadeColor(color, -30);
+            const lighterColor = shadeColor(color, 20);
+            
+            // 更新头部渐变
+            document.querySelector('header').style.background = `linear-gradient(135deg, ${darkerColor} 0%, ${color} 100%)`;
+            
+            // 更新页脚渐变
+            document.querySelector('footer').style.background = `linear-gradient(90deg, ${darkerColor}, ${color}, ${lighterColor})`;
+            
+            // 更新按钮渐变
+            const buttons = document.querySelectorAll('#doplayers, #themeToggle');
+            buttons.forEach(btn => {
+                btn.style.background = `linear-gradient(135deg, ${darkerColor} 0%, ${color} 100%)`;
+                btn.style.boxShadow = `0 4px 15px rgba(${hexToRgb(color)}, 0.3)`;
+            });
+            
+            // 更新功能区标题颜色
+            document.querySelector('.features-title').style.color = color;
+            document.querySelector('.history-title').style.color = color;
+            
+            // 更新功能图标颜色
+            document.querySelectorAll('.feature-icon i, .history-title i').forEach(icon => {
+                icon.style.color = color;
+            });
+            
+            // 更新播放器主题
+            if (window.dp) {
+                window.dp.config.theme = color;
+                window.dp.video.style.cssText += `--dplayer-theme: ${color};`;
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('primaryColor', color);
+        }
+        
+        // 切换黑夜/白天模式
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            updateThemeToggleText(isDark);
+        }
+        
+        // 更新主题切换按钮文本
+        function updateThemeToggleText(isDark) {
+            const toggleBtn = document.getElementById('themeToggle');
+            if (isDark) {
+                toggleBtn.innerHTML = '<i class="fas fa-sun"></i> 切换白天模式';
+            } else {
+                toggleBtn.innerHTML = '<i class="fas fa-moon"></i> 切换黑夜模式';
+            }
+        }
+        
+        // 辅助函数：调整颜色深浅
+        function shadeColor(color, percent) {
+            let R = parseInt(color.substring(1, 3), 16);
+            let G = parseInt(color.substring(3, 5), 16);
+            let B = parseInt(color.substring(5, 7), 16);
+            R = parseInt(R * (100 + percent) / 100);
+            G = parseInt(G * (100 + percent) / 100);
+            B = parseInt(B * (100 + percent) / 100);
+            R = (R < 255) ? R : 255;
+            G = (G < 255) ? G : 255;
+            B = (B < 255) ? B : 255;
+            R = Math.round(R);
+            G = Math.round(G);
+            B = Math.round(B);
+            const RR = ((R.toString(16).length === 1) ? "0" + R.toString(16) : R.toString(16));
+            const GG = ((G.toString(16).length === 1) ? "0" + G.toString(16) : G.toString(16));
+            const BB = ((B.toString(16).length === 1) ? "0" + B.toString(16) : B.toString(16));
+            return `#${RR}${GG}${BB}`;
+        }
+        
+        // 辅助函数：十六进制转RGB
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `${r}, ${g}, ${b}`;
+        }
+        
+        // 事件监听
+        colorPicker.addEventListener('input', function() {
+            updatePrimaryColor(this.value);
+        });
+        
+        document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+    })();
+});
+</script>
+</body>
+</html>
