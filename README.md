@@ -41,6 +41,34 @@ cd m3u8-online-player
 
 ---
 
+## docker一键运行
+
+```bash
+docker run -d \
+--name m3u8-player-container \
+-p 8080:80 \
+-e TZ=Asia/Shanghai \
+--restart always \
+ywsj/m3u8-player:latest
+```
+
+## docker-compose方式
+
+```yaml
+services:
+  m3u8-player:  # 服务名称：m3u8-player
+    image: ywsj/m3u8-player:latest  # 使用的镜像（从Docker Hub拉取）
+    container_name: m3u8-player-container  # 容器名称
+    ports:
+      - "8080:80"   # 端口映射：宿主机8080 -> 容器80
+    restart: always  # 自动重启策略：无论退出原因，都会自动重启
+    environment:
+      - TZ=Asia/Shanghai  # 设置容器时区为上海
+```
+
+
+
+
 ## 📦 外部依赖
 本项目使用了以下开源库：
 - [jQuery](https://jquery.com/)  
