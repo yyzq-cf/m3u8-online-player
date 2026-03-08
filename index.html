@@ -683,53 +683,104 @@ async function downloadVideo(m3u8Url) {
     var btn = $('#downloadBtn');
     btn.html('<i class="fas fa-spinner fa-spin"></i> 下载中...');
     
+    // 尝试多个 CORS 代理
+    var corsProxies = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url=',
+        'https://cors.div123.com/?',
+        ''
+    ];
+    
+    async function tryFetchWithProxies(url) {
+        for (var proxy of corsProxies) {
+            try {
+                var fetchUrl = proxy + encodeURIComponent(url);
+                var response = await fetch(fetchUrl, { 
+                    mode: proxy ? 'cors' : 'cors',
+                    headers: { 'Accept': '*/*' }
+                });
+                if (response.ok) return await response.text();
+            } catch (e) {
+                console.log('Proxy failed:', proxy);
+            }
+        }
+        throw new Error('所有代理都失败');
+    }
+    
+    async function downloadSegmentWithProxies(segmentUrl) {
+        for (var proxy of corsProxies) {
+            if (!proxy) continue;
+            try {
+                var fetchUrl = proxy + encodeURIComponent(segmentUrl);
+                var response = await fetch(fetchUrl, { mode: 'cors' });
+                if (response.ok) return await response.blob();
+            } catch (e) {}
+        }
+        return null;
+    }
+    
     try {
-        // 1. 获取 m3u8 播放列表内容
-        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(m3u8Url);
-        var playlistText = await fetch(proxyUrl).then(r => r.text());
+        btn.html('<i class="fas fa-spinner fa-spin"></i> 解析中...');
         
-        // 2. 解析所有 ts 片段 URL
+        // 1. 获取 m3u8 播放列表
+        var playlistText = await tryFetchWithProxies(m3u8Url);
+        
+        // 2. 解析所有 ts 片段
         var lines = playlistText.split('\n');
         var segments = [];
         var baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
         
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
-            if (line && !line.startsWith('#') && line.endsWith('.ts')) {
+            if (line && !line.startsWith('#') && (line.endsWith('.ts') || line.includes('.ts'))) {
                 var segmentUrl = line.startsWith('http') ? line : baseUrl + line;
                 segments.push(segmentUrl);
             }
         }
         
         if (segments.length === 0) {
-            alert('无法解析视频片段');
+            // 可能是嵌套 m3u8，尝试解析EXT-X-STREAM-INF
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].includes('EXT-X-STREAM-INF')) {
+                    var nextLine = lines[i + 1]?.trim();
+                    if (nextLine && !nextLine.startsWith('#')) {
+                        var bestQualityUrl = nextLine.startsWith('http') ? nextLine : baseUrl + nextLine;
+                        alert('检测到更高画质，正在切换...');
+                        return downloadVideo(bestQualityUrl);
+                    }
+                }
+            }
+            alert('无法解析视频片段，请检查链接是否正确');
             btn.html('<i class="fas fa-download"></i> 下载');
             return;
         }
+        
+        alert('找到 ' + segments.length + ' 个视频片段，开始下载...');
         
         // 3. 下载所有片段
         var blobs = [];
-        for (var j = 0; j < segments.length; j++) {
-            try {
-                var segmentBlob = await fetch(segments[j], { mode: 'cors' }).then(r => r.blob());
-                blobs.push(segmentBlob);
-            } catch (e) {
-                console.log('片段 ' + j + ' 下载失败，跳过');
+        for (var j = 0; j < Math.min(segments.length, 100); j++) {
+            btn.html('<i class="fas fa-spinner fa-spin"></i> ' + Math.round((j + 1) / segments.length * 100) + '%');
+            
+            var blob = await downloadSegmentWithProxies(segments[j]);
+            if (blob) {
+                blobs.push(blob);
             }
-            btn.html('<i class="fas fa-spinner fa-spin"></i> 下载中 ' + Math.round((j + 1) / segments.length * 100) + '%');
+            
+            // 每5个片段检查一次，让UI有时间更新
+            if (j % 5 === 0) await new Promise(r => setTimeout(r, 10));
         }
         
         if (blobs.length === 0) {
-            alert('视频服务器不支持直接下载（CORS 限制）\n\n可以尝试：\n1. 使用浏览器插件下载\n2. 使用 yt-dlp 命令行工具');
+            alert('下载失败：视频服务器禁止跨域下载\n\n' + m3u8Url.substring(0, 50) + '...\n\n这是浏览器安全限制，无法绕过。建议使用 yt-dlp 或浏览器插件下载。');
             btn.html('<i class="fas fa-download"></i> 下载');
             return;
         }
         
-        // 4. 合并所有片段
+        // 4. 合并并下载
         btn.html('<i class="fas fa-cog fa-spin"></i> 合并中...');
         var mergedBlob = new Blob(blobs, { type: 'video/mp2t' });
         
-        // 5. 触发下载
         var url = URL.createObjectURL(mergedBlob);
         var a = document.createElement('a');
         a.href = url;
@@ -738,11 +789,11 @@ async function downloadVideo(m3u8Url) {
         URL.revokeObjectURL(url);
         
         btn.html('<i class="fas fa-download"></i> 下载');
-        alert('下载完成！共下载 ' + blobs.length + ' 个片段');
+        alert('下载完成！共下载 ' + blobs.length + '/' + segments.length + ' 个片段');
         
     } catch (error) {
         console.error(error);
-        alert('下载失败: ' + error.message);
+        alert('下载失败: ' + error.message + '\n\n请尝试使用 yt-dlp 工具下载');
         btn.html('<i class="fas fa-download"></i> 下载');
     }
 }
