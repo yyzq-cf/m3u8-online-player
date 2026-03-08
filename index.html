@@ -678,24 +678,11 @@ function renderHistory() {
         playVideo(url);
     });
 }
-// 下载视频功能
+// 下载视频功能 - 直接打开在线下载页面
 function downloadVideo(url) {
-    // 方法1: 使用在线m3u8下载服务
-    var downloadServices = [
-        'https://m3u8player.net/?url=',
-        'https://www.yyets.net/share/index?resource=',
-        'https://www.m3u8player.top/?url='
-    ];
-    
-    // 方法2: 复制链接到剪贴板
-    if (confirm('由于浏览器安全限制，需要使用第三方工具下载。\n\n点击"确定"复制视频链接，然后可使用 IDM、 yt-dlp 等工具下载。\n\n点击"取消"尝试在线下载。')) {
-        copyToClipboard(url);
-        alert('链接已复制！\n\n使用工具下载：\n- yt-dlp: yt-dlp ' + url + '\n- IDM: 新建任务粘贴链接');
-    } else {
-        // 尝试打开在线下载页面
-        var downloadUrl = 'https://m3u8player.net/?url=' + encodeURIComponent(url);
-        window.open(downloadUrl, '_blank');
-    }
+    // 使用 online-m3u8.com 服务直接下载
+    var downloadUrl = 'https://www.online-m3u8.com/?url=' + encodeURIComponent(url);
+    window.open(downloadUrl, '_blank');
 }
 
 // 复制到剪贴板
