@@ -678,11 +678,73 @@ function renderHistory() {
         playVideo(url);
     });
 }
-// 下载视频功能 - 直接打开在线下载页面
-function downloadVideo(url) {
-    // 使用 online-m3u8.com 服务直接下载
-    var downloadUrl = 'https://www.online-m3u8.com/?url=' + encodeURIComponent(url);
-    window.open(downloadUrl, '_blank');
+// 下载视频功能 - 纯前端直接下载
+async function downloadVideo(m3u8Url) {
+    var btn = $('#downloadBtn');
+    btn.html('<i class="fas fa-spinner fa-spin"></i> 下载中...');
+    
+    try {
+        // 1. 获取 m3u8 播放列表内容
+        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(m3u8Url);
+        var playlistText = await fetch(proxyUrl).then(r => r.text());
+        
+        // 2. 解析所有 ts 片段 URL
+        var lines = playlistText.split('\n');
+        var segments = [];
+        var baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
+        
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line && !line.startsWith('#') && line.endsWith('.ts')) {
+                var segmentUrl = line.startsWith('http') ? line : baseUrl + line;
+                segments.push(segmentUrl);
+            }
+        }
+        
+        if (segments.length === 0) {
+            alert('无法解析视频片段');
+            btn.html('<i class="fas fa-download"></i> 下载');
+            return;
+        }
+        
+        // 3. 下载所有片段
+        var blobs = [];
+        for (var j = 0; j < segments.length; j++) {
+            try {
+                var segmentBlob = await fetch(segments[j], { mode: 'cors' }).then(r => r.blob());
+                blobs.push(segmentBlob);
+            } catch (e) {
+                console.log('片段 ' + j + ' 下载失败，跳过');
+            }
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 下载中 ' + Math.round((j + 1) / segments.length * 100) + '%');
+        }
+        
+        if (blobs.length === 0) {
+            alert('视频服务器不支持直接下载（CORS 限制）\n\n可以尝试：\n1. 使用浏览器插件下载\n2. 使用 yt-dlp 命令行工具');
+            btn.html('<i class="fas fa-download"></i> 下载');
+            return;
+        }
+        
+        // 4. 合并所有片段
+        btn.html('<i class="fas fa-cog fa-spin"></i> 合并中...');
+        var mergedBlob = new Blob(blobs, { type: 'video/mp2t' });
+        
+        // 5. 触发下载
+        var url = URL.createObjectURL(mergedBlob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'video_' + Date.now() + '.ts';
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        btn.html('<i class="fas fa-download"></i> 下载');
+        alert('下载完成！共下载 ' + blobs.length + ' 个片段');
+        
+    } catch (error) {
+        console.error(error);
+        alert('下载失败: ' + error.message);
+        btn.html('<i class="fas fa-download"></i> 下载');
+    }
 }
 
 // 复制到剪贴板
