@@ -90,7 +90,8 @@ services:
 
 
 ## ☕️ 感谢支持
-![001.png](https://png.yyzq.eu.org/thumbnails/da2796121ee7617f6e6b6aa65c38be2b.png)
+![001.png](https://png.ywsj.gq/i/2026/07/09/12jcqu1.png
+)
 
 
 ## 📜 开源协议
